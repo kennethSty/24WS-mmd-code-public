@@ -2,6 +2,8 @@
 # Algorithms for collaborative filtering
 
 import numpy as np
+from scipy.sparse import csr_array, csc_array, csr_matrix
+from scipy.sparse.linalg import norm
 
 def complete_code(message):
     raise Exception(f"Please complete the code: {message}")
@@ -28,11 +30,10 @@ def fast_cosine_sim(utility_matrix, vector, axis=0):
     norms = np.linalg.norm(utility_matrix, axis=axis)
     um_normalized = utility_matrix / norms
     # Compute the dot product of transposed normalized matrix and the vector
-    dot = complete_code("fast_cosine_sim")
+    dot = np.dot(np.transpose(um_normalized), vector)
     # Scale by the vector norm
     scaled = dot / np.linalg.norm(vector)
     return scaled
-
 
 # Implement the CF from the lecture 1
 def rate_all_items(orig_utility_matrix, user_index, neighborhood_size):
@@ -53,7 +54,7 @@ def rate_all_items(orig_utility_matrix, user_index, neighborhood_size):
         # Find the indices of users who rated the item
         users_who_rated = np.where(np.isnan(orig_utility_matrix[item_index, :]) == False)[0]
         # From those, get indices of users with the highest similarity (watch out: result indices are rel. to users_who_rated)
-        best_among_who_rated = complete_code("users with highest similarity")
+        best_among_who_rated = np.argsort(similarities[users_who_rated])
         # Select top neighborhood_size of them
         best_among_who_rated = best_among_who_rated[-neighborhood_size:]
         # Convert the indices back to the original utility matrix indices
@@ -62,7 +63,10 @@ def rate_all_items(orig_utility_matrix, user_index, neighborhood_size):
         best_among_who_rated = best_among_who_rated[np.isnan(similarities[best_among_who_rated]) == False]
         if best_among_who_rated.size > 0:
             # Compute the rating of the item
-            rating_of_item = complete_code("compute the ratings")
+            ratings_of_selected_users = clean_utility_matrix[np.ix_([item_index], best_among_who_rated)]
+            similarities_of_selected_users = similarities[best_among_who_rated]
+            rating_of_item = np.dot(ratings_of_selected_users, similarities_of_selected_users) \
+                    / np.sum(np.abs(similarities_of_selected_users))
         else:
             rating_of_item = np.nan
         print(f"item_idx: {item_index}, neighbors: {best_among_who_rated}, rating: {rating_of_item}")
