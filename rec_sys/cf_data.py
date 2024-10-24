@@ -4,6 +4,7 @@
 import numpy as np
 import polars as pl
 import pandas as pd
+from scipy.sparse import csr_matrix
 
 # Routines to load MovieLens data and convert it to utility matrix
 
@@ -45,6 +46,21 @@ def read_movielens_file_and_convert_to_um(file_path, max_rows=None):
     print_df_stats(f"Final utility matrix (numpy array as np.float32)", util_mat_np)
     return util_mat_np
 
+def read_movielens_file_and_convert_to_sparse_um(file_path, max_rows = None):
+    """ Read a local MovieLens file and return the utility matrix as a pivot table where
+        columns=userid, rows=movieid (relabeled) and contents are movie rating (NaN = no rating given).
+        Original file has columns: userId,movieId,rating,timestamp
+        See https://files.grouplens.org/datasets/movielens/ml-25m-README.html
+    """
+
+    df = pl.read_csv(file_path,
+                     has_header=True, columns=[0, 1, 2],
+                     new_columns=['userID', 'movieID', 'rating'],
+                     n_rows=max_rows,
+                     schema_overrides={'userID': pl.UInt32, 'movieID': pl.UInt32, 'rating': pl.Float32()})
+
+    print_df_stats(f"Loaded sparse data from '{file_path}'", df)
+    return csr_matrix(df)
 
 def load_and_unzip_dataset(url, path_to_save, unzip_path, force_download=False):
     import requests
@@ -80,6 +96,13 @@ def get_um_by_name(config, dataset_name):
         return np.asarray(um_lecture)
     else:
         raise ValueError(f"Unknown dataset name: {dataset_name}")
+
+def get_sparse_um_by_name(config, dataset_name):
+    if dataset_name == "movielens":
+        load_and_unzip_dataset(config.dowload_url, config.download_dir, config.unzipped_dir)
+        return read_movielens_file_and_convert_to_sparse_um(
+            config.file_path,
+            max_rows=config.max_rows)
 
 
 if __name__ == '__main__':
