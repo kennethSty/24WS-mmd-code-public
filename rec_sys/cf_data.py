@@ -103,6 +103,15 @@ def get_sparse_um_by_name(config, dataset_name):
         return read_movielens_file_and_convert_to_sparse_um(
             config.file_path,
             max_rows=config.max_rows)
+    elif dataset_name == "sparse_test":
+        um_sparse = csr_matrix(
+                   [[    1., np.nan,     3.,     0., np.nan,     5.],
+                   [np.nan,     0.,     5.,     4.,     0.,     0.],
+                   [    2.,     4., np.nan,     1.,     2., np.nan],
+                   [    0.,     2.,     4., np.nan,     5.,     0.],
+                   [    0.,     0.,     4.,     3.,     4.,     2.],
+                   [    1., np.nan,     3., np.nan,     3., np.nan]])
+        return um_sparse
 
 
 if __name__ == '__main__':
